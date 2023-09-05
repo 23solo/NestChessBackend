@@ -1,4 +1,7 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+} from '@nestjs/common';
 
 import { AuthDto } from './dto';
 import * as argon from 'argon2';
@@ -19,42 +22,42 @@ export class AuthService {
     @InjectModel(User.name) private userModel: Model<User>,
   ) {}
   sendMail = (userEmail: string, token: string) => {
-    const data = 
-      `<p> 
+    const data = `<p> 
         Click <a href="${process.env.DOMAIN}/verifyemail?token=${token}"> 
         here</a> to Verify your email 
-      </p>`
+      </p> or copy and pase the link below in your browser. <br>
+      ${process.env.DOMAIN}/verifyemail?token=${token}`;
     this.mailerService.sendMail({
+      //$argon2id$v=19$m=65536,t=3,p=4$kBcpcJRSNP1sfWjx8CajkQ$1KzNtJk+EH9WtbqTDt2j6xvBpb3RbWYLpNhe2RZWFQ8
+      //$argon2id$v=19$m=65536,t=3,p=4$kBcpcJRSNP1sfWjx8CajkQ$1KzNtJkEH9WtbqTDt2j6xvBpb3RbWYLpNhe2RZWFQ8
       to: userEmail,
       from: this.config.get('EMAIL'),
       subject: 'Welcome : Verify your email',
       text: 'Hello',
       html: data,
-    });
+    }); //$argon2id$v=19$m=65536,t=3,p=4$llKD+9J3XRykFNEIfI9WpQ$LYaYbh7Z1rJJfuQyf8/Q3baDChF2Ucjab6Ef1FCcQCE
   };
   singup = async (dto: AuthDto): Promise<User> => {
     // generate the pw hash
     const { email, password } = dto;
     const hashPassword = await argon.hash(password);
-    const hashToken = await argon.hash(email)
+    let hashToken = await argon.hash(email);
 
-    console.log(email, password);
+    hashToken = hashToken.replace('+', '');
     // save the new user in the db
     const user = await this.userModel.findOne({ email });
-    console.log(user);
 
     if (user) {
       throw new ForbiddenException('Credentials Taken');
     }
+
     const newUser = new this.userModel({
       email,
       password: hashPassword,
+      verifyToken: hashToken,
+      verifyTokenExpiry: Date.now() + 2400000,
     });
-    console.log('New', newUser);
-
     const savedUser = await newUser.save();
-
-    console.log('Saved', savedUser);
 
     this.sendMail(email, hashToken);
 
