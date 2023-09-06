@@ -1,3 +1,7 @@
+- chmod +x githooks/pre-commit
+- chmod +x githooks/createBranch // To create the branch consistently
+- Run `ln -s -f ../../githooks/pre-commit .git/hooks/pre-commit` to link githooks to run locally
+
 <p align="center">
   <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
 </p>
