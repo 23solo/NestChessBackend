@@ -1,12 +1,19 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import {
+  Prop,
+  Schema,
+  SchemaFactory,
+} from '@nestjs/mongoose';
 
 @Schema()
 export class User {
-  @Prop({ required: [true, 'Please provide a email'], unique: true })
-  email: String;
+  @Prop({
+    required: [true, 'Please provide a email'],
+    unique: true,
+  })
+  email: string;
 
   @Prop({ required: [true, 'Please provide a password'] })
-  password: String;
+  password: string;
 
   @Prop({ default: false })
   isVerified: Boolean;
@@ -15,16 +22,17 @@ export class User {
   isAdmin: Boolean;
 
   @Prop()
-  forgotPasswordToken: String;
+  forgotPasswordToken: string;
 
   @Prop()
   forgotPasswordTokenExpiry: Date;
 
   @Prop()
-  verifyToken: String;
+  verifyToken: string;
 
   @Prop()
   verifyTokenExpiry: Date;
 }
 
-export const UserSchema = SchemaFactory.createForClass(User);
+export const UserSchema =
+  SchemaFactory.createForClass(User);

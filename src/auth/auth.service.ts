@@ -2,10 +2,8 @@ import {
   ForbiddenException,
   Injectable,
 } from '@nestjs/common';
-
 import { AuthDto } from './dto';
 import * as argon from 'argon2';
-
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { User } from 'src/schemas/user.schema';
@@ -21,28 +19,28 @@ export class AuthService {
     private readonly mailerService: MailerService,
     @InjectModel(User.name) private userModel: Model<User>,
   ) {}
+
   sendMail = (userEmail: string, token: string) => {
     const data = `<p> 
-        Click <a href="${process.env.DOMAIN}/verifyemail?token=${token}"> 
-        here</a> to Verify your email 
+        Click <b><a href="${process.env.DOMAIN}/verifyemail?token=${token}"> 
+        HERE</a></b> to Verify your email 
       </p> or copy and pase the link below in your browser. <br>
       ${process.env.DOMAIN}/verifyemail?token=${token}`;
     this.mailerService.sendMail({
-      //$argon2id$v=19$m=65536,t=3,p=4$kBcpcJRSNP1sfWjx8CajkQ$1KzNtJk+EH9WtbqTDt2j6xvBpb3RbWYLpNhe2RZWFQ8
-      //$argon2id$v=19$m=65536,t=3,p=4$kBcpcJRSNP1sfWjx8CajkQ$1KzNtJkEH9WtbqTDt2j6xvBpb3RbWYLpNhe2RZWFQ8
       to: userEmail,
       from: this.config.get('EMAIL'),
       subject: 'Welcome : Verify your email',
       text: 'Hello',
       html: data,
-    }); //$argon2id$v=19$m=65536,t=3,p=4$llKD+9J3XRykFNEIfI9WpQ$LYaYbh7Z1rJJfuQyf8/Q3baDChF2Ucjab6Ef1FCcQCE
+    });
   };
-  singup = async (dto: AuthDto): Promise<User> => {
+  singup = async (dto: AuthDto) => {
     // generate the pw hash
     const { email, password } = dto;
     const hashPassword = await argon.hash(password);
     let hashToken = await argon.hash(email);
 
+    // remove `+` from token to easily verify user
     hashToken = hashToken.replace('+', '');
     // save the new user in the db
     const user = await this.userModel.findOne({ email });
@@ -60,40 +58,54 @@ export class AuthService {
     const savedUser = await newUser.save();
 
     this.sendMail(email, hashToken);
-
-    return savedUser;
-  };
-  singin = async (dto: AuthDto) => {
-    // // Find the user by email
-    // const user = await this.prisma.user.findUnique({
-    //   where: {
-    //     email: dto.email,
-    //   },
-    // });
-    // // if user not present throw exception
-    // if (!user) {
-    //   throw new ForbiddenException('Wrong Creds: Check your email');
-    // }
-    // // compare password
-    // const pwMatches = await argon.verify(user.hash, dto.password);
-    // // if pw is incorrect throw exception
-    // if (!pwMatches) {
-    //   throw new ForbiddenException('Wrong Creds: Check you password');
-    // }
-    // // send back the user token
-    // return this.signToken(user.id, user.email);
-  };
-
-  signToken = async (userId: number, email: string) => {
-    const payload = {
-      sub: userId,
-      email,
+    const response = {
+      message: `User created successfully, Kindly check ${email} to verify`,
+      success: true,
     };
-    const token = await this.jwt.signAsync(payload, {
-      expiresIn: '1d',
-      secret: this.config.get('JWT_SECRET'),
-    });
-
-    return { access_token: token };
+    return response;
   };
+
+  singin = async (dto: AuthDto) => {
+    const { email, password } = dto;
+    // Find the user by email
+    const user = await this.userModel.findOne({ email });
+    // if user not present throw exception
+    if (!user) {
+      throw new ForbiddenException(
+        'Wrong Creds: Check your email',
+      );
+    }
+    if (!user.isVerified) {
+      throw new ForbiddenException(
+        'Kindly Verify your email...',
+      );
+    }
+    // compare password
+    const pwMatches = await argon.verify(
+      user.password,
+      password,
+    );
+    // if pw is incorrect throw exception
+    if (!pwMatches) {
+      throw new ForbiddenException(
+        'Wrong Creds: Check you password',
+      );
+    }
+    // Return Success
+    return 'SuccessFully Logged In';
+  };
+
+  // Might need for keeping user logged In
+  // signToken = async (userId: number, email: string) => {
+  //   const payload = {
+  //     sub: userId,
+  //     email,
+  //   };
+  //   const token = await this.jwt.signAsync(payload, {
+  //     expiresIn: '1d',
+  //     secret: this.config.get('JWT_SECRET'),
+  //   });
+
+  //   return { access_token: token };
+  // };
 }
