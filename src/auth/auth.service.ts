@@ -14,7 +14,7 @@ import { MailerService } from '@nestjs-modules/mailer';
 @Injectable()
 export class AuthService {
   constructor(
-    private jwt: JwtService,
+    // private jwt: JwtService, Might need with frontend
     private config: ConfigService,
     private readonly mailerService: MailerService,
     @InjectModel(User.name) private userModel: Model<User>,
@@ -34,6 +34,7 @@ export class AuthService {
       html: data,
     });
   };
+
   singup = async (dto: AuthDto) => {
     // generate the pw hash
     const { email, password } = dto;
