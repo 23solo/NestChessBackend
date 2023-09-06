@@ -20,8 +20,5 @@ export class AuthController {
     return this.authService.singin(dto);
   }
 
-  @Get()
-  findAll(): string {
-    return 'This action returns all cats';
-  }
+ 
 }
