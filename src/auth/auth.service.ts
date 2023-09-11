@@ -2,6 +2,7 @@ import {
   ForbiddenException,
   Injectable,
 } from '@nestjs/common';
+import { Request, Response } from 'express';
 import { AuthDto } from './dto';
 import * as argon from 'argon2';
 import { JwtService } from '@nestjs/jwt';
@@ -15,6 +16,7 @@ import { MailerService } from '@nestjs-modules/mailer';
 export class AuthService {
   constructor(
     // private jwt: JwtService, Might need with frontend
+    private jwt: JwtService,
     private config: ConfigService,
     private readonly mailerService: MailerService,
     @InjectModel(User.name) private userModel: Model<User>,
@@ -42,12 +44,14 @@ export class AuthService {
     let hashToken = await argon.hash(email);
 
     // remove `+` from token to easily verify user
-    hashToken = hashToken.replace('+', '');
+    hashToken = hashToken.replaceAll('+', '');
     // save the new user in the db
     const user = await this.userModel.findOne({ email });
 
     if (user) {
-      throw new ForbiddenException('Credentials Taken');
+      throw new ForbiddenException({
+        error: 'User Exists!! Kindly Login',
+      });
     }
 
     const newUser = new this.userModel({
@@ -56,7 +60,7 @@ export class AuthService {
       verifyToken: hashToken,
       verifyTokenExpiry: Date.now() + 2400000,
     });
-    const savedUser = await newUser.save();
+    await newUser.save();
 
     this.sendMail(email, hashToken);
     const response = {
@@ -66,20 +70,20 @@ export class AuthService {
     return response;
   };
 
-  singin = async (dto: AuthDto) => {
+  singin = async (dto: AuthDto, res: Response) => {
     const { email, password } = dto;
     // Find the user by email
     const user = await this.userModel.findOne({ email });
     // if user not present throw exception
     if (!user) {
-      throw new ForbiddenException(
-        'Wrong Creds: Check your email',
-      );
+      throw new ForbiddenException({
+        error: "User Doesn't exists!! Kindly SignUp",
+      });
     }
     if (!user.isVerified) {
-      throw new ForbiddenException(
-        'Kindly Verify your email...',
-      );
+      throw new ForbiddenException({
+        error: 'Kindly Verify your email...',
+      });
     }
     // compare password
     const pwMatches = await argon.verify(
@@ -88,25 +92,53 @@ export class AuthService {
     );
     // if pw is incorrect throw exception
     if (!pwMatches) {
-      throw new ForbiddenException(
-        'Wrong Creds: Check you password',
-      );
+      throw new ForbiddenException({
+        error: 'Wrong Creds: Check you password',
+      });
     }
+
+    // Add token for session
+    const token = await this.signToken(email);
+    res.cookie('token', token, {
+      httpOnly: true,
+    });
+
     // Return Success
-    return 'SuccessFully Logged In';
+    return res.sendStatus(200);
   };
 
   // Might need for keeping user logged In
-  // signToken = async (userId: number, email: string) => {
-  //   const payload = {
-  //     sub: userId,
-  //     email,
-  //   };
-  //   const token = await this.jwt.signAsync(payload, {
-  //     expiresIn: '1d',
-  //     secret: this.config.get('JWT_SECRET'),
-  //   });
+  signToken = async (email: string) => {
+    const payload = {
+      email,
+    };
+    const token = await this.jwt.signAsync(payload, {
+      expiresIn: '1d',
+      secret: this.config.get('JWT_SECRET'),
+    });
 
-  //   return { access_token: token };
-  // };
+    return token;
+  };
+
+  getToken = async (req: Request) => {
+    const response = {
+      success: true,
+    };
+
+    if (req.cookies['token']) {
+      return response;
+    }
+
+    response.success = false;
+    return response;
+  };
+
+  signout = async (res: any) => {
+    // Find the user by email
+    res.cookie('token', '', {
+      httpOnly: true,
+      expires: new Date(0),
+    });
+    return res.sendStatus(200);
+  };
 }
