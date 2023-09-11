@@ -25,8 +25,8 @@ export class AuthController {
   }
 
   @Post('signout')
-  signout(@Res() res: Response) {
-    return this.authService.signout(res);
+  signout(@Req() req: Request, @Res() res: Response) {
+    return this.authService.signout(req, res);
   }
 
   @Post('get_token')

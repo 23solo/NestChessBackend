@@ -133,12 +133,15 @@ export class AuthService {
     return response;
   };
 
-  signout = async (res: any) => {
+  signout = async (req: Request, res: Response) => {
     // Find the user by email
-    res.cookie('token', '', {
-      httpOnly: true,
-      expires: new Date(0),
-    });
-    return res.sendStatus(200);
+    if (req.cookies['token']) {
+      res.cookie('token', '', {
+        httpOnly: true,
+        expires: new Date(0),
+      });
+      return res.sendStatus(200);
+    }
+    return res.sendStatus(403);
   };
 }
