@@ -1,4 +1,8 @@
-import { Module } from '@nestjs/common';
+import {
+  MiddlewareConsumer,
+  Module,
+  NestModule,
+} from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
@@ -9,6 +13,8 @@ import {
 import { MongooseModule } from '@nestjs/mongoose';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { VerifyModule } from './verify/verify.module';
+import { LoggerMiddleware } from './logger.middleware';
+import { ChessInitModule } from './chess-init/chess-init.module';
 
 @Module({
   imports: [
@@ -34,9 +40,14 @@ import { VerifyModule } from './verify/verify.module';
       }),
     }),
     VerifyModule,
+    ChessInitModule,
   ],
-
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    // Might use later
+    consumer.apply(LoggerMiddleware).forRoutes('/unknown');
+  }
+}

@@ -3,7 +3,11 @@ import {
   Controller,
   Get,
   Post,
+  Req,
+  Res,
 } from '@nestjs/common';
+import { Request, Response } from 'express';
+
 import { AuthService } from './auth.service';
 import { AuthDto } from './dto';
 @Controller('auth')
@@ -16,9 +20,17 @@ export class AuthController {
   }
 
   @Post('signin')
-  signin(@Body() dto: AuthDto) {
-    return this.authService.singin(dto);
+  signin(@Body() dto: AuthDto, @Res() res: Response) {
+    return this.authService.singin(dto, res);
   }
 
- 
+  @Post('signout')
+  signout(@Req() req: Request, @Res() res: Response) {
+    return this.authService.signout(req, res);
+  }
+
+  @Post('get_token')
+  getToken(@Req() req: Request) {
+    return this.authService.getToken(req);
+  }
 }
