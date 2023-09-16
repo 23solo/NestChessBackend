@@ -7,6 +7,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { ChessInitModule } from './chess-init/chess-init.module';
+import { ChessmovesGateway } from './chessmoves/chessmoves.gateway';
 import {
   ConfigModule,
   ConfigService,
@@ -43,7 +44,7 @@ import { LoggerMiddleware } from './logger.middleware';
     ChessInitModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, ChessmovesGateway],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
