@@ -43,8 +43,7 @@ export const MainChess = (
     updatePiece(curr_move, user, board.grid);
     if (isKingInCheck(board, user)) {
       updatePiece(curr_move, user, board.grid, true, piece);
-      console.log('Retryyyy king is in check !!!');
-      return;
+      throw 'Retryyyy king is in check !!!';
     }
     (curr_move.currentI = base_move[0]),
       (curr_move.currentJ = base_move[1]),
@@ -57,10 +56,10 @@ export const MainChess = (
       // Check if user has any valid moves to protect his king else declare curr_user as winner
       if (!canProtectKing(board, otherUser)) {
         console.log(
-          `\n\nWinner Winner chicken Dinner ${user.name} has beat ${otherUser.name}\n\n`,
+          `\n\n Winner ${user.name} has beat ${otherUser.name}\n\n`,
         );
-
-        return;
+        board.size = 0; // Just to know game has ended
+        return board;
       }
     }
     // if the king was in check before now after valid move it's safe
@@ -68,8 +67,7 @@ export const MainChess = (
       user.isKingInCheck = false;
     }
   } else {
-    console.log('Retry invalid move!!!');
-    return;
+    throw 'Retry invalid move!!!';
   }
   console.log('\n\n');
 

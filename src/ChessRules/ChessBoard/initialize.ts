@@ -10,6 +10,6 @@ export const initializeBoard = () => {
   fillBoard.placeQueen(board);
   fillBoard.placeBishops(board);
   fillBoard.placeKnights(board);
-  board.print();
+  // board.print();
   return board;
 };

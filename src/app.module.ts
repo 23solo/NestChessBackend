@@ -16,6 +16,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { VerifyModule } from './verify/verify.module';
 import { LoggerMiddleware } from './logger.middleware';
+import { ChessInitService } from './chess-init/chess-init.service';
 
 @Module({
   imports: [
@@ -44,7 +45,11 @@ import { LoggerMiddleware } from './logger.middleware';
     ChessInitModule,
   ],
   controllers: [AppController],
-  providers: [AppService, ChessmovesGateway],
+  providers: [
+    AppService,
+    ChessmovesGateway,
+    ChessInitService,
+  ],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

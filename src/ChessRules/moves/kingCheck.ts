@@ -11,21 +11,28 @@ const getPiece = (
   board: Board,
   user: User,
   i: number,
-  j: number
+  j: number,
 ): Piece | undefined => {
   let [currentI, currentJ] = getKingPosition(user);
 
-  if (board.grid[currentI + i] && board.grid[currentI + i][currentJ + j])
+  if (
+    board.grid[currentI + i] &&
+    board.grid[currentI + i][currentJ + j]
+  )
     return board.grid[currentI + i][currentJ + j].piece;
   return undefined;
 };
 
-const checkLeftTopDiagonal = (board: Board, user: User): boolean => {
+const checkLeftTopDiagonal = (
+  board: Board,
+  user: User,
+): boolean => {
   let [currentI, currentJ] = getKingPosition(user);
 
   currentI--, currentJ--;
   while (currentI >= 0 && currentJ >= 0) {
-    const piece: Piece | undefined = board.grid[currentI][currentJ].piece;
+    const piece: Piece | undefined =
+      board.grid[currentI][currentJ].piece;
 
     if (
       piece &&
@@ -41,11 +48,15 @@ const checkLeftTopDiagonal = (board: Board, user: User): boolean => {
   return false;
 };
 
-const checkRightTopDiagonal = (board: Board, user: User): boolean => {
+const checkRightTopDiagonal = (
+  board: Board,
+  user: User,
+): boolean => {
   let [currentI, currentJ] = getKingPosition(user);
   currentI--, currentJ++;
   while (currentI >= 0 && currentJ < 8) {
-    const piece: Piece | undefined = board.grid[currentI][currentJ].piece;
+    const piece: Piece | undefined =
+      board.grid[currentI][currentJ].piece;
     if (
       piece &&
       piece.color != user.color &&
@@ -60,11 +71,15 @@ const checkRightTopDiagonal = (board: Board, user: User): boolean => {
   return false;
 };
 
-const checkLeftDownDiagonal = (board: Board, user: User): boolean => {
+const checkLeftDownDiagonal = (
+  board: Board,
+  user: User,
+): boolean => {
   let [currentI, currentJ] = getKingPosition(user);
   currentI++, currentJ--;
   while (currentI < 8 && currentJ >= 0) {
-    const piece: Piece | undefined = board.grid[currentI][currentJ].piece;
+    const piece: Piece | undefined =
+      board.grid[currentI][currentJ].piece;
     if (
       piece &&
       piece.color != user.color &&
@@ -79,11 +94,15 @@ const checkLeftDownDiagonal = (board: Board, user: User): boolean => {
   return false;
 };
 
-const checkRightDownDiagonal = (board: Board, user: User): boolean => {
+const checkRightDownDiagonal = (
+  board: Board,
+  user: User,
+): boolean => {
   let [currentI, currentJ] = getKingPosition(user);
   currentI++, currentJ++;
   while (currentI < 8 && currentJ < 8) {
-    const piece: Piece | undefined = board.grid[currentI][currentJ].piece;
+    const piece: Piece | undefined =
+      board.grid[currentI][currentJ].piece;
     if (
       piece &&
       piece.color != user.color &&
@@ -98,11 +117,15 @@ const checkRightDownDiagonal = (board: Board, user: User): boolean => {
   return false;
 };
 
-const checkRightStraight = (board: Board, user: User): boolean => {
+const checkRightStraight = (
+  board: Board,
+  user: User,
+): boolean => {
   let [currentI, currentJ] = getKingPosition(user);
   currentJ++;
   while (currentJ < 8) {
-    const piece: Piece | undefined = board.grid[currentI][currentJ].piece;
+    const piece: Piece | undefined =
+      board.grid[currentI][currentJ].piece;
     if (
       piece &&
       piece.color != user.color &&
@@ -116,11 +139,16 @@ const checkRightStraight = (board: Board, user: User): boolean => {
   return false;
 };
 
-const checkLeftStraight = (board: Board, user: User): boolean => {
+const checkLeftStraight = (
+  board: Board,
+  user: User,
+): boolean => {
   let [currentI, currentJ] = getKingPosition(user);
+
   currentJ--;
   while (currentJ >= 0) {
-    const piece: Piece | undefined = board.grid[currentI][currentJ].piece;
+    const piece: Piece | undefined =
+      board.grid[currentI][currentJ].piece;
     if (
       piece &&
       piece.color != user.color &&
@@ -134,11 +162,15 @@ const checkLeftStraight = (board: Board, user: User): boolean => {
   return false;
 };
 
-const checkTopStraight = (board: Board, user: User): boolean => {
+const checkTopStraight = (
+  board: Board,
+  user: User,
+): boolean => {
   let [currentI, currentJ] = getKingPosition(user);
   currentI--;
   while (currentI >= 0) {
-    const piece: Piece | undefined = board.grid[currentI][currentJ].piece;
+    const piece: Piece | undefined =
+      board.grid[currentI][currentJ].piece;
     if (
       piece &&
       piece.color != user.color &&
@@ -152,11 +184,15 @@ const checkTopStraight = (board: Board, user: User): boolean => {
   return false;
 };
 
-const checkDownStraight = (board: Board, user: User): boolean => {
+const checkDownStraight = (
+  board: Board,
+  user: User,
+): boolean => {
   let [currentI, currentJ] = getKingPosition(user);
   currentI++;
   while (currentI < 8) {
-    const piece: Piece | undefined = board.grid[currentI][currentJ].piece;
+    const piece: Piece | undefined =
+      board.grid[currentI][currentJ].piece;
     if (
       piece &&
       piece.color != user.color &&
@@ -184,7 +220,11 @@ const checkKnight = (board: Board, user: User): boolean => {
 
   for (const [x, y] of positions) {
     const piece = getPiece(board, user, x, y);
-    if (piece && piece.name === 'Knight' && piece.color !== user.color) {
+    if (
+      piece &&
+      piece.name === 'Knight' &&
+      piece.color !== user.color
+    ) {
       {
         kingCheckPosition(user, piece.position);
         return true;
@@ -198,24 +238,50 @@ const checkKnight = (board: Board, user: User): boolean => {
 const checkPawn = (board: Board, user: User): boolean => {
   let [currentI] = getKingPosition(user);
   if (user.color == 'B' && currentI != 7) {
-    let piece: Piece | undefined = getPiece(board, user, 1, 1);
-    if (piece && piece.name == 'Pawn' && piece.color != user.color) {
+    let piece: Piece | undefined = getPiece(
+      board,
+      user,
+      1,
+      1,
+    );
+    if (
+      piece &&
+      piece.name == 'Pawn' &&
+      piece.color != user.color
+    ) {
       kingCheckPosition(user, piece.position);
       return true;
     }
     piece = getPiece(board, user, 1, -1);
-    if (piece && piece.name == 'Pawn' && piece.color != user.color) {
+    if (
+      piece &&
+      piece.name == 'Pawn' &&
+      piece.color != user.color
+    ) {
       kingCheckPosition(user, piece.position);
       return true;
     }
   } else {
-    let piece: Piece | undefined = getPiece(board, user, -1, 1);
-    if (piece && piece.name == 'Pawn' && piece.color != user.color) {
+    let piece: Piece | undefined = getPiece(
+      board,
+      user,
+      -1,
+      1,
+    );
+    if (
+      piece &&
+      piece.name == 'Pawn' &&
+      piece.color != user.color
+    ) {
       kingCheckPosition(user, piece.position);
       return true;
     }
     piece = getPiece(board, user, -1, -1);
-    if (piece && piece.name == 'Pawn' && piece.color != user.color) {
+    if (
+      piece &&
+      piece.name == 'Pawn' &&
+      piece.color != user.color
+    ) {
       kingCheckPosition(user, piece.position);
       return true;
     }
@@ -223,7 +289,10 @@ const checkPawn = (board: Board, user: User): boolean => {
   return false;
 };
 
-const validDiagonalMove = (board: Board, user: User): boolean => {
+const validDiagonalMove = (
+  board: Board,
+  user: User,
+): boolean => {
   if (checkLeftTopDiagonal(board, user)) return true;
   if (checkRightTopDiagonal(board, user)) return true;
   if (checkLeftDownDiagonal(board, user)) return true;
@@ -231,7 +300,10 @@ const validDiagonalMove = (board: Board, user: User): boolean => {
   return false;
 };
 
-const validStraightMove = (board: Board, user: User): boolean => {
+const validStraightMove = (
+  board: Board,
+  user: User,
+): boolean => {
   if (checkDownStraight(board, user)) return true;
   if (checkTopStraight(board, user)) return true;
   if (checkLeftStraight(board, user)) return true;
@@ -239,7 +311,10 @@ const validStraightMove = (board: Board, user: User): boolean => {
   return false;
 };
 
-export const isKingInCheck = (board: Board, user: User): boolean => {
+export const isKingInCheck = (
+  board: Board,
+  user: User,
+): boolean => {
   if (validDiagonalMove(board, user)) return true;
   if (validStraightMove(board, user)) return true;
   if (checkPawn(board, user)) return true;
