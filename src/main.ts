@@ -9,6 +9,8 @@ async function bootstrap() {
     credentials: true, //access-control-allow-credentials:true
     optionSuccessStatus: 200,
   };
+  console.log('Cors Options is', corsOptions);
+
   app.enableCors(corsOptions);
   app.use(cookieParser());
   await app.listen(3333);

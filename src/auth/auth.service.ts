@@ -41,11 +41,14 @@ export class AuthService {
     // generate the pw hash
     const { email, password } = dto;
     const hashPassword = await argon.hash(password);
+    console.log('Creating Hash Token !!');
     let hashToken = await argon.hash(email);
 
     // remove `+` from token to easily verify user
     hashToken = hashToken.replaceAll('+', '');
     // save the new user in the db
+
+    console.log('Checking User Exists or Not');
     const user = await this.userModel.findOne({ email });
 
     if (user) {
@@ -53,7 +56,7 @@ export class AuthService {
         error: 'User Exists!! Kindly Login',
       });
     }
-
+    console.log('Creating New User !!');
     const newUser = new this.userModel({
       email,
       password: hashPassword,
@@ -61,12 +64,12 @@ export class AuthService {
       verifyTokenExpiry: Date.now() + 2400000,
     });
     await newUser.save();
-
     this.sendMail(email, hashToken);
     const response = {
       message: `User created successfully, Kindly check ${email} to verify`,
       success: true,
     };
+    console.log('User Created Successfully !!');
     return response;
   };
 

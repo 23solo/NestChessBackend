@@ -1,3 +1,4 @@
+import { UseInterceptors } from '@nestjs/common';
 import {
   ConnectedSocket,
   MessageBody,
@@ -9,10 +10,12 @@ import { Server, Socket } from 'socket.io';
 import { Board } from 'src/ChessRules/Board';
 import { User } from 'src/ChessRules/user/User';
 import { ChessInitService } from 'src/chess-init/chess-init.service';
+import { socketMiddleware } from 'src/socket.middleware';
 
 import { v4 as uuid } from 'uuid';
 
-@WebSocketGateway(8001, { cors: '*' })
+@UseInterceptors(socketMiddleware)
+@WebSocketGateway({ cors: '*' })
 export class ChessmovesGateway {
   constructor(private chessService: ChessInitService) {}
   generateRoomId = () => {
