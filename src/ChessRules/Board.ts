@@ -29,18 +29,18 @@ export class Board {
     return grid;
   }
 
-  print() {
-    for (let i = 0; i < this.size; i++) {
-      let rowStr = '';
-      for (let j = 0; j < this.size; j++) {
-        const cell = this.grid[i][j];
-        rowStr += cell.piece
-          ? `  ${cell.piece.symbol}${cell.piece.color} `
-          : `   _   `;
-        // console.log(cell);
-      }
-      console.log(rowStr);
-      console.log();
-    }
-  }
+  // print() {
+  //   for (let i = 0; i < this.size; i++) {
+  //     let rowStr = '';
+  //     for (let j = 0; j < this.size; j++) {
+  //       const cell = this.grid[i][j];
+  //       rowStr += cell.piece
+  //         ? `  ${cell.piece.symbol}${cell.piece.color} `
+  //         : `   _   `;
+  //       // console.log(cell);
+  //     }
+  //     console.log(rowStr);
+  //     console.log();
+  //   }
+  // }
 }

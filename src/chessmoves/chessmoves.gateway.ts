@@ -26,6 +26,23 @@ export class ChessmovesGateway {
     User[]
   >();
 
+  @SubscribeMessage('create')
+  handleCreateEvent(
+    @MessageBody() data: any,
+    @ConnectedSocket() client: Socket,
+  ): void {
+    const roomId = this.generateRoomId(); // Generate a unique room ID
+    client.join(roomId);
+    client.emit('roomCreated', roomId); // Send the room ID back to the client
+    let user = this.chessService.setUser(data);
+    let res = {
+      user: user,
+      msg: 'Share the Code and Kindly wait for the opponent to join',
+    };
+    this.rooms[roomId] = [user];
+    this.server.to(roomId).emit('events', res);
+  }
+
   @SubscribeMessage('join')
   handleJoinEvent(
     @MessageBody() data: any,
@@ -37,6 +54,7 @@ export class ChessmovesGateway {
       const room = this.server.sockets.adapter.rooms.get(
         data.roomId,
       );
+      client.emit('roomCreated', data.roomId);
       if (room.size < 2) {
         let userColor: 'W' | 'B';
         client.join(data.roomId);
@@ -46,14 +64,10 @@ export class ChessmovesGateway {
         else userColor = 'W';
 
         let joiningUser = this.chessService.setUser({
-          name: 'Polo',
+          name: data.name,
           color: userColor,
         });
 
-        let userResponse = {
-          user: joiningUser,
-          msg: 'A new user joined the chat',
-        };
         let setUser = {
           user: joiningUser,
           oppUser: gameCreatingUser,
@@ -63,13 +77,12 @@ export class ChessmovesGateway {
         setUser.user = gameCreatingUser;
         client.to(data.roomId).emit('user', setUser);
 
-        this.server
-          .to(data.roomId)
-          .emit('events', userResponse);
+        // this.server
+        //   .to(data.roomId)
+        //   .emit('events', userResponse);
         this.rooms[data.roomId].push(joiningUser);
         data.color = userColor;
         let board = this.chessService.initBoard(data);
-        data.name = 'solo';
         let user = this.chessService.setUser(data);
         let res = {
           board: board,
@@ -83,8 +96,6 @@ export class ChessmovesGateway {
         res.oppUser = gameCreatingUser;
         res.board = board;
         client.to(data.roomId).emit('chessinit', res);
-
-        console.log('second', res.board.grid[0][0].piece);
       } else {
         client.emit(
           'error',
@@ -92,27 +103,20 @@ export class ChessmovesGateway {
         );
       }
     } else {
-      const roomId = this.generateRoomId(); // Generate a unique room ID
-      client.join(roomId);
-      client.emit('roomCreated', roomId); // Send the room ID back to the client
-      data.name = 'Solo';
-      let user = this.chessService.setUser(data);
-      let res = {
-        user: user,
-        msg: 'Share the Code and Kindly wait for the opponent to join',
-      };
-      this.rooms[roomId] = [user];
-      this.server.to(roomId).emit('events', res);
+      client.emit('error', 'Invalid Game ID'); // Send the room ID back to the client
     }
   }
 
   @SubscribeMessage('message')
   handleMessage(
-    @MessageBody() data: { msg: string; roomId: string },
+    @MessageBody()
+    data: { user: string; msg: string; roomId: string },
     @ConnectedSocket() client: Socket,
   ): void {
-    client.to(data.roomId).emit('message', data.msg);
-    client.emit('message', 'Hello Sender');
+    client.emit('message', 'You : ' + data.msg);
+    client
+      .to(data.roomId)
+      .emit('message', data.user + ' : ' + data.msg);
   }
 
   @SubscribeMessage('chessMove')
@@ -120,11 +124,10 @@ export class ChessmovesGateway {
     @MessageBody() data: any,
     @ConnectedSocket() client: Socket,
   ): void {
-    console.log(data.user);
     let users: User[] = [];
-    if (this.rooms[data.roomId][0].name == data.user.name)
+    if (this.rooms[data.roomId][0].name == data.user.name) {
       users = this.rooms[data.roomId];
-    else {
+    } else {
       users.push(this.rooms[data.roomId][1]);
       users.push(this.rooms[data.roomId][0]);
     }
@@ -133,9 +136,22 @@ export class ChessmovesGateway {
       userMove: data.userMove,
       board: data.board,
     };
+
     try {
+      if (
+        users[0].color == 'B' &&
+        users[0].userMove + 1 != users[1].userMove
+      )
+        throw 'Wait For Opps Move !!';
+      else if (
+        users[0].color == 'W' &&
+        users[0].userMove != users[1].userMove
+      )
+        throw 'Wait For Opps Move !!';
       let board: Board =
         this.chessService.checkMoves(params);
+
+      users[0].userMove += 1;
       if (data.user.color == 'B') {
         client.to(data.roomId).emit('chessMove', board);
         client.emit(
@@ -156,7 +172,7 @@ export class ChessmovesGateway {
         client.emit('gameStatus', 'won');
       }
     } catch (error) {
-      client.emit('error', error);
+      client.emit('board_error', error);
     }
   }
 }

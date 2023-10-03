@@ -6,4 +6,5 @@ export type User = {
   isKingInCheck: boolean;
   kingCheckedFrom: [number, number];
   kingPosition: [number, number];
+  userMove: number;
 };

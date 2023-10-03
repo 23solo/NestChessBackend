@@ -36,7 +36,6 @@ export const MainChess = (
     // ) {
     //   continue;
     // }
-    console.log('Came here', curr_move, user);
 
     let piece: Piece | undefined =
       board.grid[curr_move.toI][curr_move.toJ].piece;
@@ -53,6 +52,7 @@ export const MainChess = (
     updateCastle(user, curr_move);
     if (isKingInCheck(board, otherUser)) {
       otherUser.isKingInCheck = true;
+
       // Check if user has any valid moves to protect his king else declare curr_user as winner
       if (!canProtectKing(board, otherUser)) {
         console.log(

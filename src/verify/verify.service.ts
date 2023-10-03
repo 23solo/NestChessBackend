@@ -18,7 +18,6 @@ export class VerifyService {
     });
     if (!user) {
       throw 'Token Is not Valid';
-      return;
     }
     user.isVerified = true;
     user.verifyToken = undefined;

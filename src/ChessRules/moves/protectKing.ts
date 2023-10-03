@@ -83,6 +83,7 @@ const canRemoveKnight = (
     let checkMove: move = getMove(
       userPieces[i].position,
       user.kingCheckedFrom,
+      false,
     );
     if (checkValidMove(checkMove, board, user)) {
       return true;

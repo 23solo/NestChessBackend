@@ -45,6 +45,7 @@ export class ChessInitService {
       isKingInCheck: false,
       kingCheckedFrom: [-1, -1],
       kingPosition: [6, 4],
+      userMove: 0,
     };
     if (params.color == 'B') {
       user.kingPosition = [0, 4];

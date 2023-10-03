@@ -104,7 +104,7 @@ export class AuthService {
     });
 
     // Return Success
-    return res.sendStatus(200);
+    return res.send({ name: email.split('@')[0] });
   };
 
   // Might need for keeping user logged In
