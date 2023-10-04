@@ -114,6 +114,7 @@ export class AuthService {
       httpOnly: true,
       secure: true,
       sameSite: 'none',
+      domain: process.env.FRONTEND,
     });
 
     // Return Success
