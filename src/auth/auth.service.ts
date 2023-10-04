@@ -152,7 +152,7 @@ export class AuthService {
 
   signout = async (req: Request, res: Response) => {
     // Find the user by email
-    if (req.cookies['token']) {
+    if (req.cookies['token'] || req.body.token) {
       res.cookie('token', '', {
         httpOnly: true,
         expires: new Date(0),

@@ -170,6 +170,47 @@ export class ChessmovesGateway {
             this.chessService.reverseBoard(board),
           );
       }
+      if (users[0].color == 'W') {
+        client
+          .to(data.roomId)
+          .emit('oppUserMove', [
+            7 - data.userMove[1][0],
+            7 - data.userMove[1][1],
+          ]);
+      } else {
+        client
+          .to(data.roomId)
+          .emit('oppUserMove', [
+            data.userMove[1][0],
+            data.userMove[1][1],
+          ]);
+      }
+
+      if (users[1].isKingInCheck) {
+        if (users[0].color == 'W') {
+          client
+            .to(data.roomId)
+            .emit('kingCheck', [
+              7 - users[1].kingPosition[0],
+              7 - users[1].kingPosition[1],
+            ]);
+          client.emit('kingCheck', [
+            users[1].kingPosition[0],
+            users[1].kingPosition[1],
+          ]);
+        } else {
+          client
+            .to(data.roomId)
+            .emit('kingCheck', [
+              users[1].kingPosition[0],
+              users[1].kingPosition[1],
+            ]);
+          client.emit('kingCheck', [
+            7 - users[1].kingPosition[0],
+            7 - users[1].kingPosition[1],
+          ]);
+        }
+      }
       if (board.size == 0) {
         client.to(data.roomId).emit('gameStatus', 'lost');
         client.emit('gameStatus', 'won');
