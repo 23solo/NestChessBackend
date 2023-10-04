@@ -78,17 +78,23 @@ export class AuthService {
     // Find the user by email
     const user = await this.userModel.findOne({ email });
     // if user not present throw exception
+    console.log('Checking if user exists !!');
+
     if (!user) {
       throw new ForbiddenException({
         error: "User Doesn't exists!! Kindly SignUp",
       });
     }
+
+    console.log('Checking if user is verified !!');
     if (!user.isVerified) {
       throw new ForbiddenException({
         error: 'Kindly Verify your email...',
       });
     }
     // compare password
+
+    console.log('Checking if pw matched !!');
     const pwMatches = await argon.verify(
       user.password,
       password,
@@ -101,9 +107,12 @@ export class AuthService {
     }
 
     // Add token for session
+
+    console.log('Creating token for the user !!');
     const token = await this.signToken(email);
     res.cookie('token', token, {
       httpOnly: true,
+      secure: true,
     });
 
     // Return Success
