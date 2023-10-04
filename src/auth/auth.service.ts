@@ -113,6 +113,7 @@ export class AuthService {
     res.cookie('token', token, {
       httpOnly: true,
       secure: true,
+      sameSite: 'none',
     });
 
     // Return Success
