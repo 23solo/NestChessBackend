@@ -23,6 +23,11 @@ export class VerifyService {
     user.verifyToken = undefined;
     user.verifyTokenExpiry = undefined;
     await user.save();
-    return 'User Verified Please login';
+
+    // Return a response with a redirect URL
+    return {
+      message: 'User Verified. Please login.',
+      redirectUrl: 'https://chessify.org/dashboard', // Redirect URL
+    };
   };
 }

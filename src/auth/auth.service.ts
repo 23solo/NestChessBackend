@@ -22,19 +22,68 @@ export class AuthService {
     @InjectModel(User.name) private userModel: Model<User>,
   ) {}
 
-  sendMail = (userEmail: string, token: string) => {
-    const data = `<p> 
-        Click <b><a href="${process.env.DOMAIN}/verifyemail?token=${token}"> 
-        HERE</a></b> to Verify your email 
-      </p> or copy and pase the link below in your browser. <br>
-      ${process.env.DOMAIN}/verifyemail?token=${token}`;
-    this.mailerService.sendMail({
+  sendMail = async (
+    userEmail: string,
+    subject: string = 'Welcome : Verify your email',
+    text: string = 'Hello',
+    htmlData: string,
+    token: string = '',
+  ) => {
+    if (token) {
+      htmlData = htmlData.replace(/{{token}}/g, token);
+    }
+
+    await this.mailerService.sendMail({
       to: userEmail,
       from: this.config.get('EMAIL'),
-      subject: 'Welcome : Verify your email',
-      text: 'Hello',
-      html: data,
+      subject: subject,
+      text: text,
+      html: htmlData,
     });
+  };
+
+  // New function to send verification email
+  sendVerificationEmail = async (
+    email: string,
+    hashToken: string,
+  ) => {
+    // Customize the email subject, text, and HTML content
+    const subject = 'Verify Your Email';
+    const text =
+      'Please verify your email by clicking the link in the email.';
+
+    // Enhanced HTML content with inline styles
+    const htmlData = `
+      <div style="font-family: Arial, sans-serif; line-height: 1.6; padding: 20px; background-color: #f4f4f4; border-radius: 5px;">
+        <h2 style="color: #333;">Welcome to Our Service!</h2>
+        <p style="color: #555;">
+          Thank you for signing up! To complete your registration, please verify your email address by clicking the link below:
+        </p>
+        <p>
+          <a href="${process.env.DOMAIN}/verifyemail?token=${hashToken}" style="background-color: #28a745; color: white; padding: 10px 15px; text-decoration: none; border-radius: 5px;">Verify Your Email</a>
+        </p>
+        <p style="color: #555;">
+          Or copy and paste the link below into your browser:
+        </p>
+        <p style="color: #007bff;">
+          ${process.env.DOMAIN}/verifyemail?token=${hashToken}
+        </p>
+        <p style="color: #555;">
+          If you did not create an account, please ignore this email.
+        </p>
+        <footer style="margin-top: 20px; font-size: 0.9em; color: #777;">
+          <p>Best regards,</p>
+          <p>Your Company Name</p>
+        </footer>
+      </div>
+    `;
+    await this.sendMail(
+      email,
+      subject,
+      text,
+      htmlData,
+      hashToken,
+    );
   };
 
   singup = async (dto: AuthDto) => {
@@ -50,7 +99,6 @@ export class AuthService {
 
     console.log('Checking User Exists or Not');
     const user = await this.userModel.findOne({ email });
-
     if (user) {
       throw new ForbiddenException({
         error: 'User Exists!! Kindly Login',
@@ -64,13 +112,20 @@ export class AuthService {
       verifyTokenExpiry: Date.now() + 2400000,
     });
     await newUser.save();
-    this.sendMail(email, hashToken);
-    const response = {
-      message: `User created successfully, Kindly check ${email} to verify`,
-      success: true,
-    };
-    console.log('User Created Successfully !!');
-    return response;
+    try {
+      // Call the new function to send the verification email
+      await this.sendVerificationEmail(email, hashToken);
+
+      const response = {
+        message: `User created successfully, Kindly check ${email} to verify`,
+        success: true,
+      };
+      console.log('User Created Successfully !!');
+      return response;
+    } catch (error) {
+      console.log("Couldn't send the mail !!", error); // Log the error for debugging
+      return 500;
+    }
   };
 
   singin = async (dto: AuthDto, res: Response) => {

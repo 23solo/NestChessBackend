@@ -32,12 +32,15 @@ import { ChessInitService } from './chess-init/chess-init.service';
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         transport: {
-          host: 'smtp.gmail.com',
+          host: 'mail.privateemail.com',
           port: 587,
           auth: {
             user: configService.get('EMAIL'),
             pass: configService.get('PASS'),
           },
+        },
+        defaults: {
+          from: `"Chessify" <no-reply@chessify.org>`,
         },
       }),
     }),
