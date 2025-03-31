@@ -1,11 +1,11 @@
 import {
+  isValidPawnMove,
   validDiagonalMove,
   validKnightMove,
-  validPawnMove,
   validStraightMove,
 } from './validMoves';
 import { Piece } from '../Piece';
-import { move } from './move';
+import { Move } from './move';
 import { Board } from '../Board';
 import { User } from '../user/User';
 import { canKingCastle } from './castle';
@@ -13,7 +13,7 @@ import { getMove } from './getMoves';
 
 const validateBasicCheck = (
   board: Board,
-  move: move,
+  move: Move,
   user: User,
 ): boolean => {
   const piece: Piece | undefined =
@@ -41,10 +41,10 @@ const validateBasicCheck = (
 };
 
 export const validPieceMove = (
-  move: move,
+  move: Move,
   board: Board,
   user: User,
-): boolean => {
+) => {
   if (!validateBasicCheck(board, move, user)) {
     return false;
   }
@@ -73,37 +73,17 @@ export const validPieceMove = (
     }
     return validStraightMove(board, move);
   } else if (piece.name == 'Pawn') {
-    if (
-      Math.abs(move.toJ - move.currentJ) > 1 ||
-      Math.abs(move.toI - move.currentI) > 2
-    ) {
-      return false;
-    }
-    if (move.toI == move.currentI - 2) {
-      if (move.currentI != 6 || move.currentJ != move.toJ) {
-        return false;
+    const result = isValidPawnMove(board, move, user);
+    console.log(result);
+
+    if (result.isValid) {
+      if (result.enPassantCapture) {
+        const [captureI, captureJ] =
+          result.enPassantCapture;
+        board.grid[captureI][captureJ].piece = undefined; // Remove the captured pawn
       }
-      return validPawnMove(board, move);
-    } else if (move.toI == move.currentI + 2) {
-      if (move.currentI != 1 || move.currentJ != move.toJ) {
-        return false;
-      }
-      return validPawnMove(board, move);
-    } else if (Math.abs(move.currentJ - move.toJ) == 1) {
-      if (board.grid[move.toI][move.toJ].piece) return true;
-      return false;
-    } else if (
-      move.toI - move.currentI == 1 &&
-      user.color == 'B'
-    ) {
-      return true;
-    } else if (
-      move.currentI - move.toI == 1 &&
-      user.color == 'W'
-    ) {
-      return true;
     }
-    return false;
+    return result.isValid;
   } else if (piece.name == 'Knight') {
     if (
       Math.abs(move.currentI - move.toI) +

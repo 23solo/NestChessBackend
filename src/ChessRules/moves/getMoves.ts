@@ -1,5 +1,5 @@
-import { move } from './move';
+import { Move } from './move';
 
-export const getMove = (move: move) => {
+export const getMove = (move: Move) => {
   return [move.currentI, move.currentJ, move.toI, move.toJ];
 };

@@ -1,4 +1,4 @@
-export type move = {
+export type Move = {
   currentI: number;
   currentJ: number;
   toI: number;

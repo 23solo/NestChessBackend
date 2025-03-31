@@ -123,10 +123,12 @@ export class ChessmovesGateway {
   }
 
   @SubscribeMessage('chessMove')
-  handleChessMoves(
+  async handleChessMoves(
     @MessageBody() data: any,
     @ConnectedSocket() client: Socket,
-  ): void {
+  ) {
+    console.log('Data is \n\n\n', data);
+
     let users: User[] = [];
     if (this.rooms[data.roomId][0].name == data.user.name) {
       users = this.rooms[data.roomId];
@@ -138,6 +140,7 @@ export class ChessmovesGateway {
       users: users,
       userMove: data.userMove,
       board: data.board,
+      promotion: data.promotionPiece,
     };
 
     try {
@@ -152,7 +155,7 @@ export class ChessmovesGateway {
       )
         throw 'Wait For Opps Move !!';
       let board: Board =
-        this.chessService.checkMoves(params);
+        await this.chessService.checkmoves(params);
 
       users[0].userMove += 1;
       if (data.user.color == 'B') {
@@ -216,6 +219,8 @@ export class ChessmovesGateway {
         client.emit('gameStatus', 'won');
       }
     } catch (error) {
+      console.log('Error is ', error);
+
       client.emit('board_error', error);
     }
   }

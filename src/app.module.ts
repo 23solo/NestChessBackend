@@ -17,6 +17,7 @@ import { MailerModule } from '@nestjs-modules/mailer';
 import { VerifyModule } from './verify/verify.module';
 import { LoggerMiddleware } from './logger.middleware';
 import { ChessInitService } from './chess-init/chess-init.service';
+import { StockfishService } from './services/stockfish.service';
 
 @Module({
   imports: [
@@ -52,6 +53,7 @@ import { ChessInitService } from './chess-init/chess-init.service';
     AppService,
     ChessmovesGateway,
     ChessInitService,
+    StockfishService,
   ],
 })
 export class AppModule implements NestModule {

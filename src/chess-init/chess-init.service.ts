@@ -3,9 +3,11 @@ import { Board } from 'src/ChessRules/Board';
 import { initializeBoard } from 'src/ChessRules/ChessBoard/initialize';
 import { MainChess } from 'src/ChessRules/Main';
 import { User } from 'src/ChessRules/user/User';
+import { StockfishService } from 'src/services/stockfish.service';
 
 @Injectable()
 export class ChessInitService {
+  constructor(private stockfishService: StockfishService) {}
   initBoard = (params: any) => {
     // console.log(params);
     if (params.color == 'B') {
@@ -14,10 +16,11 @@ export class ChessInitService {
     return initializeBoard();
   };
 
-  checkMoves = (params: {
+  checkmoves = (params: {
     users: User[];
     userMove: number[][];
     board: Board;
+    promotion: boolean | string;
   }) => {
     if (params.users[0].color == 'B') {
       params.board = this.reverseBoard(params.board);
@@ -30,6 +33,8 @@ export class ChessInitService {
       params.users,
       params.board,
       params.userMove,
+      this.stockfishService,
+      params.promotion,
     );
   };
 
@@ -46,6 +51,8 @@ export class ChessInitService {
       kingCheckedFrom: [-1, -1],
       kingPosition: [6, 4],
       userMove: 0,
+      totalMoves: 0,
+      timeLeft: 1000,
     };
     if (params.color == 'B') {
       user.kingPosition = [0, 4];

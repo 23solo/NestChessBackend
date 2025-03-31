@@ -4,10 +4,10 @@ import { updatePiece } from '../updateBoard';
 import { User } from '../user/User';
 import { getMove } from './getMoves';
 import { isKingInCheck } from './kingCheck';
-import { move } from './move';
+import { Move } from './move';
 import { validStraightMove } from './validMoves';
 
-export const updateCastle = (user: User, move: move) => {
+export const updateCastle = (user: User, move: Move) => {
   if (user.color == 'W') {
     // if it's a rook
     if (
@@ -58,7 +58,7 @@ export const updateCastle = (user: User, move: move) => {
 const checkCastle = (
   user: User,
   board: Board,
-  move: move,
+  move: Move,
   j: number,
   castleNumber: number,
 ): boolean => {
@@ -95,11 +95,11 @@ const checkCastle = (
 export const canKingCastle = (
   board: Board,
   user: User,
-  move: move,
+  move: Move,
 ): boolean => {
   let [currentI, currentJ, toI, toJ] = getMove(move);
 
-  let checkMove: move = {
+  let checkmove: Move = {
     currentI,
     currentJ,
     toI,
@@ -108,9 +108,9 @@ export const canKingCastle = (
 
   if (user.isKingInCheck) return false;
   if (currentJ > toJ && user.canCastleLeft) {
-    checkMove.toJ = 1;
+    checkmove.toJ = 1;
 
-    if (!validStraightMove(board, checkMove)) return false;
+    if (!validStraightMove(board, checkmove)) return false;
 
     if (checkCastle(user, board, move, 0, -1)) {
       //update rook position too
@@ -120,8 +120,8 @@ export const canKingCastle = (
       return true;
     }
   } else if (currentJ < toJ && user.canCastleRight) {
-    checkMove.toJ = 6;
-    if (!validStraightMove(board, checkMove)) return false;
+    checkmove.toJ = 6;
+    if (!validStraightMove(board, checkmove)) return false;
     if (checkCastle(user, board, move, 7, 1)) {
       //update rook position too
       move.currentJ = 7;

@@ -1,55 +1,61 @@
+import { StockfishService } from 'src/services/stockfish.service';
 import { Board } from './Board';
 import { initializeBoard } from './ChessBoard/initialize';
 import { Piece } from './Piece';
 import { updateCastle } from './moves/castle';
 import { isKingInCheck } from './moves/kingCheck';
-import { move } from './moves/move';
+import { Move } from './moves/move';
 import { canProtectKing } from './moves/protectKing';
 import { validPieceMove } from './moves/validatePieceMoves';
 import { updatePiece } from './updateBoard';
 import { User } from './user/User';
 
-export const MainChess = (
+export const MainChess = async (
   users: User[],
   board: Board,
   userMove: number[][],
+  stockfishService: StockfishService,
+  promotion: any = false,
 ) => {
   const user: User = users[0];
   const otherUser: User = users[1];
-  let curr_move: move = {
+  let currMove: Move = {
     currentI: userMove[0][0],
     currentJ: userMove[0][1],
     toI: userMove[1][0],
     toJ: userMove[1][1],
   };
-  let base_move: number[] = [
-    curr_move.currentI,
-    curr_move.currentJ,
-    curr_move.toI,
-    curr_move.toJ,
+  let baseMove: number[] = [
+    currMove.currentI,
+    currMove.currentJ,
+    currMove.toI,
+    currMove.toJ,
   ];
 
-  if (validPieceMove(curr_move, board, user)) {
-    // if (
-    //   user.kingPosition[0] == curr_move.toI &&
-    //   user.kingPosition[1] == curr_move.toJ
-    // ) {
-    //   continue;
-    // }
-
+  if (validPieceMove(currMove, board, user)) {
+    board.lastMove = currMove;
     let piece: Piece | undefined =
-      board.grid[curr_move.toI][curr_move.toJ].piece;
-    updatePiece(curr_move, user, board.grid);
+      board.grid[currMove.toI][currMove.toJ].piece;
+    console.log('Promotions i ', promotion);
+
+    updatePiece(
+      currMove,
+      user,
+      board.grid,
+      false,
+      undefined,
+      promotion,
+    );
     if (isKingInCheck(board, user)) {
-      updatePiece(curr_move, user, board.grid, true, piece);
+      updatePiece(currMove, user, board.grid, true, piece);
       throw 'Retryyyy king is in check !!!';
     }
-    (curr_move.currentI = base_move[0]),
-      (curr_move.currentJ = base_move[1]),
-      (curr_move.toI = base_move[2]),
-      (curr_move.toJ = base_move[3]);
+    (currMove.currentI = baseMove[0]),
+      (currMove.currentJ = baseMove[1]),
+      (currMove.toI = baseMove[2]),
+      (currMove.toJ = baseMove[3]);
 
-    updateCastle(user, curr_move);
+    updateCastle(user, currMove);
     if (isKingInCheck(board, otherUser)) {
       otherUser.isKingInCheck = true;
 
@@ -69,7 +75,35 @@ export const MainChess = (
   } else {
     throw 'Retry invalid move!!!';
   }
+
   console.log('\n\n');
+  let fenString = '';
+  for (let i = 0; i < 8; i++) {
+    if (i != 0) fenString += '/';
+    let count = 0;
+    for (let j = 0; j < 8; j++) {
+      const pieceVal = board.grid[i][j].piece;
+      if (pieceVal) {
+        if (count != 0) {
+          fenString += count;
+          count = 0;
+        }
+        fenString += board.grid[i][j].piece.key;
+      } else {
+        count += 1;
+      }
+    }
+    if (count != 0) {
+      fenString += count;
+    }
+  }
+  fenString +=
+    ' ' +
+    otherUser.color.toLocaleLowerCase() +
+    ' KQkq - 0 1';
+  console.log('Final string is ', fenString);
+  const res = await stockfishService.getBestMove(fenString);
+  console.log(`Best move is ${res}`);
 
   return board;
 };

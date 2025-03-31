@@ -17,5 +17,6 @@ async function bootstrap() {
   app.use(new LoggingMiddleware().use);
 
   await app.listen(3333);
+  console.log('yes');
 }
 bootstrap();

@@ -7,4 +7,6 @@ export type User = {
   kingCheckedFrom: [number, number];
   kingPosition: [number, number];
   userMove: number;
+  totalMoves: number;
+  timeLeft: number;
 };

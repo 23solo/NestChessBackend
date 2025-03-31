@@ -3,6 +3,7 @@ export class Piece {
     public color: 'W' | 'B',
     public symbol: string,
     public name: string,
-    public position: [number, number]
+    public position: [number, number],
+    public key: string,
   ) {}
 }

@@ -3,14 +3,14 @@ import { Piece } from '../Piece';
 import { updatePiece } from '../updateBoard';
 import { User } from '../user/User';
 import { isKingInCheck } from './kingCheck';
-import { move } from './move';
+import { Move } from './move';
 import { validPieceMove } from './validatePieceMoves';
 
 const getMove = (
   fromPosition: [number, number],
   toPosition: [number, number],
   checkKing = true,
-): move => {
+): Move => {
   let toI = fromPosition[0] + toPosition[0],
     toJ = fromPosition[1] + toPosition[1];
   if (checkKing) {
@@ -37,12 +37,18 @@ const checkPieceBlock = (
 ): boolean => {
   for (let curr_position in allBlockPosition) {
     for (let curr_piece in userPieces) {
-      let checkMove: move = getMove(
+      console.log(
+        'Checking curr position with piece',
+        curr_position,
+        curr_piece,
+      );
+
+      let checkmove: Move = getMove(
         userPieces[curr_piece].position,
         allBlockPosition[curr_position],
         false,
       );
-      if (checkValidMove(checkMove, board, user)) {
+      if (checkValidMove(checkmove, board, user)) {
         return true;
       }
     }
@@ -51,23 +57,25 @@ const checkPieceBlock = (
 };
 
 const checkValidMove = (
-  checkMove: move,
+  checkmove: Move,
   board: Board,
   user: User,
 ): boolean => {
-  if (validPieceMove(checkMove, board, user)) {
+  if (validPieceMove(checkmove, board, user)) {
     let piece: Piece | undefined =
-      board.grid[checkMove.toI][checkMove.toJ].piece;
-    updatePiece(checkMove, user, board.grid);
+      board.grid[checkmove.toI][checkmove.toJ].piece;
+    updatePiece(checkmove, user, board.grid);
 
     if (isKingInCheck(board, user)) {
       // revert the move
 
-      updatePiece(checkMove, user, board.grid, true, piece);
+      updatePiece(checkmove, user, board.grid, true, piece);
       return false;
     } else {
       // revert your move and return true that valid move exists
-      updatePiece(checkMove, user, board.grid, true, piece);
+      console.log('this move saves king', checkmove);
+
+      updatePiece(checkmove, user, board.grid, true, piece);
       return true;
     }
   }
@@ -80,12 +88,12 @@ const canRemoveKnight = (
   userPieces: Piece[],
 ): boolean => {
   for (let i in userPieces) {
-    let checkMove: move = getMove(
+    let checkmove: Move = getMove(
       userPieces[i].position,
       user.kingCheckedFrom,
       false,
     );
-    if (checkValidMove(checkMove, board, user)) {
+    if (checkValidMove(checkmove, board, user)) {
       return true;
     }
   }
@@ -116,6 +124,17 @@ const getAllSavingKingPosition = (
   ];
   let allPositions: [number, number][] = [];
   // is king attacked from diagonal
+  console.log(
+    'King positions is',
+    kingI,
+    kingJ,
+    pieceI,
+    pieceJ,
+  );
+  //  kingI = 6
+  // kingJ = 5
+  // pieceI = 4
+  // pieceJ = 7
   if (
     Math.abs(kingI - pieceI) == Math.abs(kingJ - pieceJ)
   ) {
@@ -140,20 +159,25 @@ const getAllSavingKingPosition = (
     } else {
       if (kingJ < pieceJ) {
         kingJ++, kingI--;
-        while (kingI <= pieceI && kingJ <= pieceJ) {
+        while (kingI >= pieceI && kingJ <= pieceJ) {
+          // <-- `>=` instead of `<=`
           allPositions.push([kingI, kingJ]);
+          kingJ++, kingI--;
         }
       }
 
-      // check left down diagonal
+      // check left up diagonal
       else if (kingJ > pieceJ) {
         kingI--, kingJ--;
-        while (kingI <= pieceI && kingJ >= pieceJ) {
+        while (kingI >= pieceI && kingJ >= pieceJ) {
+          // <-- `>=` instead of `<=`
           allPositions.push([kingI, kingJ]);
+          kingI--, kingJ--;
         }
       }
     }
   }
+
   // is king attacked from straight
   // both on same row
   else if (kingI == pieceI) {
@@ -204,11 +228,11 @@ const canKingMove = (board: Board, user: User): boolean => {
     [1, 1],
   ];
   for (let i in allKingMoves) {
-    let checkMove: move;
-    checkMove = getMove(user.kingPosition, allKingMoves[i]);
+    let checkmove: Move;
+    checkmove = getMove(user.kingPosition, allKingMoves[i]);
 
-    if (basicCheck([checkMove.toI, checkMove.toJ])) {
-      if (checkValidMove(checkMove, board, user)) {
+    if (basicCheck([checkmove.toI, checkmove.toJ])) {
+      if (checkValidMove(checkmove, board, user)) {
         return true;
       }
     }
@@ -241,6 +265,7 @@ export const canProtectKing = (
   // check if any valid king move is possible
 
   if (canKingMove(board, user)) {
+    console.log('King can Move');
     return true;
   }
 
@@ -248,8 +273,10 @@ export const canProtectKing = (
   if (attackingPiece && attackingPiece.name == 'Knight') {
     // check if any piece can remove knight
     if (canRemoveKnight(board, user, userPieces)) {
+      console.log('Knight can be removed');
       return true;
     }
+    console.log("Knight can't be removed");
     return false;
   }
   // if not knight getAllSavingPositions
@@ -258,6 +285,10 @@ export const canProtectKing = (
     board,
     user.kingCheckedFrom,
     user.kingPosition,
+  );
+  console.log(
+    'All block saving positions',
+    allBlockPosition,
   );
 
   if (

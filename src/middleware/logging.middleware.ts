@@ -6,7 +6,11 @@ export class LoggingMiddleware implements NestMiddleware {
   use(req: Request, res: Response, next: NextFunction) {
     // Log the request details
     console.log(
-      `Incoming Request: ${req.method} ${req.url}`,
+      `Incoming Request: ${req.method} ${
+        req.url
+      } ${JSON.stringify(req.params)} ${JSON.stringify(
+        req.body,
+      )}`,
     );
 
     // Capture the response
