@@ -16,6 +16,7 @@ import { v4 as uuid } from 'uuid';
 
 @UseInterceptors(socketMiddleware)
 // @WebSocketGateway({ cors: '*' })
+@WebSocketGateway({ transports: ['polling', 'websocket'] })
 export class ChessmovesGateway {
   constructor(private chessService: ChessInitService) {}
   generateRoomId = () => {
