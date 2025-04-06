@@ -27,7 +27,25 @@ export class VerifyService {
     // Return a response with a redirect URL
     return {
       message: 'User Verified. Please login.',
-      redirectUrl: 'https://chessify.org/dashboard', // Redirect URL
+      redirectUrl: `${process.env.FRONTEND}/dashboard`, // Redirect URL
+    };
+  };
+
+  verifyResetToken = async (token: string) => {
+    const user = await this.userModel.findOne({
+      forgotPasswordToken: token,
+      forgotPasswordTokenExpiry: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      throw 'Password reset token is invalid or has expired';
+    }
+    console.log('Token verified successfully');
+
+    return {
+      message: 'Token verified successfully',
+      email: user.email,
+      redirectUrl: `${process.env.FRONTEND}/reset-password`,
     };
   };
 }

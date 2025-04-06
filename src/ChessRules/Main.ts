@@ -102,8 +102,8 @@ export const MainChess = async (
     otherUser.color.toLocaleLowerCase() +
     ' KQkq - 0 1';
   console.log('Final string is ', fenString);
-  const res = await stockfishService.getBestMove(fenString);
-  console.log(`Best move is ${res}`);
+  // const res = await stockfishService.getBestMove(fenString);
+  // console.log(`Best move is ${res}`);
 
   return board;
 };

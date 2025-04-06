@@ -1,9 +1,15 @@
 import {
   ForbiddenException,
   Injectable,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
-import { AuthDto } from './dto';
+import {
+  AuthDto,
+  ForgotPasswordDto,
+  ResetPasswordDto,
+  ChangePasswordDto,
+} from './dto';
 import * as argon from 'argon2';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -33,13 +39,19 @@ export class AuthService {
       htmlData = htmlData.replace(/{{token}}/g, token);
     }
 
-    await this.mailerService.sendMail({
+    const res = await this.mailerService.sendMail({
       to: userEmail,
       from: this.config.get('EMAIL'),
       subject: subject,
       text: text,
       html: htmlData,
     });
+    console.log(
+      'Response is ',
+      res,
+      res.statusCode,
+      res.data,
+    );
   };
 
   // New function to send verification email
@@ -143,8 +155,42 @@ export class AuthService {
 
     console.log('Checking if user is verified !!');
     if (!user.isVerified) {
+      // Check if verification token has expired
+      if (
+        user.verifyTokenExpiry &&
+        user.verifyTokenExpiry.getTime() < Date.now()
+      ) {
+        console.log('Token expired, generating new token');
+        // Generate new verification token
+        let newHashToken = await argon.hash(email);
+        newHashToken = newHashToken.replaceAll('+', '');
+
+        // Update user with new token and expiry
+        await this.userModel.updateOne(
+          { email },
+          {
+            verifyToken: newHashToken,
+            verifyTokenExpiry: new Date(
+              Date.now() + 2400000,
+            ), // 24 hours
+          },
+        );
+
+        // Resend verification email
+        await this.sendVerificationEmail(
+          email,
+          newHashToken,
+        );
+
+        throw new ForbiddenException({
+          error:
+            'Verification token expired. A new verification email has been sent to your email address.',
+        });
+      }
+
       throw new ForbiddenException({
-        error: 'Kindly Verify your email...',
+        error:
+          'Kindly check your email & Verify your email...',
       });
     }
     // compare password
@@ -216,4 +262,146 @@ export class AuthService {
     }
     return res.sendStatus(403);
   };
+
+  async forgotPassword(dto: ForgotPasswordDto) {
+    const { email } = dto;
+
+    // Find the user
+    const user = await this.userModel.findOne({ email });
+    if (!user) {
+      throw new ForbiddenException({
+        error: 'No user found with this email',
+      });
+    }
+
+    // Check if there's an active reset token
+    if (
+      user.forgotPasswordToken &&
+      user.forgotPasswordTokenExpiry &&
+      user.forgotPasswordTokenExpiry.getTime() > Date.now()
+    ) {
+      throw new ForbiddenException({
+        error:
+          'A password reset link has already been sent and is still active. Please check your email or wait for the current link to expire.',
+        expiresAt: user.forgotPasswordTokenExpiry,
+      });
+    }
+
+    // Generate reset token
+    let resetToken = await argon.hash(
+      email + Date.now().toString(),
+    );
+    resetToken = resetToken.replaceAll('+', '');
+
+    // Save token and expiry to user
+    user.forgotPasswordToken = resetToken;
+    user.forgotPasswordTokenExpiry = new Date(
+      Date.now() + 3600000,
+    ); // 1 hour
+    await user.save();
+
+    // Send reset password email
+    const subject = 'Reset Your Password';
+    const text =
+      'Click the link below to reset your password';
+    const htmlData = `
+      <div style="font-family: Arial, sans-serif; line-height: 1.6; padding: 20px; background-color: #f4f4f4; border-radius: 5px;">
+        <h2 style="color: #333;">Reset Your Password</h2>
+        <p style="color: #555;">
+          We received a request to reset your password. Click the button below to verify your request:
+        </p>
+        <p>
+          <a href="${process.env.DOMAIN}/verifyemail/verify-reset-token?token=${resetToken}" 
+             style="background-color: #28a745; color: white; padding: 10px 15px; text-decoration: none; border-radius: 5px;">
+            Verify Reset Request
+          </a>
+        </p>
+        <p style="color: #555;">
+          If you didn't request this, you can safely ignore this email.
+        </p>
+        <p style="color: #555;">
+          This link will expire in 1 hour.
+        </p>
+      </div>
+    `;
+
+    await this.sendMail(
+      email,
+      subject,
+      text,
+      htmlData,
+      resetToken,
+    );
+
+    return {
+      message:
+        'Password reset instructions sent to your email',
+      success: true,
+    };
+  }
+
+  async resetPassword(dto: ResetPasswordDto) {
+    const { token, newPassword } = dto;
+
+    // Find user with valid reset token
+    const user = await this.userModel.findOne({
+      forgotPasswordToken: token,
+      forgotPasswordTokenExpiry: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      throw new ForbiddenException({
+        error: 'Invalid or expired reset token',
+      });
+    }
+
+    // Hash new password and update user
+    const hashPassword = await argon.hash(newPassword);
+    user.password = hashPassword;
+    user.forgotPasswordToken = undefined;
+    user.forgotPasswordTokenExpiry = undefined;
+    await user.save();
+
+    return {
+      message: 'Password reset successful',
+      success: true,
+    };
+  }
+
+  async changePassword(
+    dto: ChangePasswordDto,
+    req: Request,
+  ) {
+    const { newPassword } = dto;
+
+    // Get user from token
+    const token = req.cookies['token'];
+    if (!token) {
+      throw new UnauthorizedException('Not authenticated');
+    }
+
+    const payload = await this.jwt.verifyAsync(token, {
+      secret: this.config.get('JWT_SECRET'),
+    });
+
+    // Find user
+    const user = await this.userModel.findOne({
+      email: payload.email,
+    });
+    if (!user) {
+      throw new ForbiddenException({
+        error: 'User not found',
+      });
+    }
+
+    // Update password
+    const hashPassword = await argon.hash(newPassword);
+    user.password = hashPassword;
+    await user.save();
+
+    return {
+      message: 'Password changed successfully',
+      success: true,
+    };
+  }
 }

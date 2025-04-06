@@ -28,4 +28,24 @@ export class VerifyController {
       return res.status(400).send({ message: error });
     }
   }
+
+  @Get('verify-reset-token')
+  async verifyResetToken(
+    @Query('token') token: string,
+    @Res() res: Response,
+  ) {
+    try {
+      const result =
+        await this.verifyService.verifyResetToken(token);
+      // Redirect to the password reset page with the verified token
+      return res.redirect(
+        `${process.env.FRONTEND}/reset-password?token=${token}&verified=true`,
+      );
+    } catch (error) {
+      console.error(error);
+      return res.redirect(
+        `${process.env.DOMAIN}/forgot-password?error=invalid-token`,
+      );
+    }
+  }
 }

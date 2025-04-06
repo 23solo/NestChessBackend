@@ -281,14 +281,6 @@ export const isEnPassant = (
 
   const opponentPawn =
     board.grid[move.currentI][move.toJ].piece;
-  console.log(
-    lastMove,
-    move,
-    opponentPawn,
-    opponentPawn.name === 'Pawn',
-    opponentPawn.color !== user.color,
-    lastMove.toI === move.currentI,
-  );
 
   if (
     opponentPawn &&
@@ -298,6 +290,14 @@ export const isEnPassant = (
     lastMove.toJ === move.toJ &&
     Math.abs(lastMove.toI - lastMove.currentI) === 2 // Ensure last move was a two-step forward move
   ) {
+    console.log(
+      lastMove,
+      move,
+      opponentPawn,
+      opponentPawn.name === 'Pawn',
+      opponentPawn.color !== user.color,
+      lastMove.toI === move.currentI,
+    );
     console.log('Yayyy it is an enpassant move');
     return true; // En passant is valid
   }

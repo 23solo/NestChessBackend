@@ -64,18 +64,27 @@ const checkValidMove = (
   if (validPieceMove(checkmove, board, user)) {
     let piece: Piece | undefined =
       board.grid[checkmove.toI][checkmove.toJ].piece;
+    const prevUserKingCheckFrom = user.kingCheckedFrom;
     updatePiece(checkmove, user, board.grid);
+    console.log('User currently is ', user);
 
     if (isKingInCheck(board, user)) {
       // revert the move
+      console.log(
+        'checking and revertinh move ',
+        checkmove,
+        piece,
+      );
 
       updatePiece(checkmove, user, board.grid, true, piece);
+      user.kingCheckedFrom = prevUserKingCheckFrom;
       return false;
     } else {
       // revert your move and return true that valid move exists
       console.log('this move saves king', checkmove);
 
       updatePiece(checkmove, user, board.grid, true, piece);
+      user.kingCheckedFrom = prevUserKingCheckFrom;
       return true;
     }
   }

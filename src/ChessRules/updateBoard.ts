@@ -23,7 +23,7 @@ export const updatePiece = (
   grid: Cell[][],
   reverse: boolean = false,
   piece: Piece | undefined = undefined,
-  promotion: any = false, // Add promotion parameter
+  promotion: any = false,
 ) => {
   console.log('Promotion is ', promotion);
 
@@ -61,7 +61,7 @@ export const updatePiece = (
         Q: 'Queen',
         R: 'Rook',
         B: 'Bishop',
-        K: 'Knight',
+        N: 'Knight',
       };
       const promotedPiece: Piece = {
         name: nameVal[promotion], // e.g., 'Q', 'R', 'B', 'N'

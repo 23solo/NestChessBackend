@@ -11,7 +11,7 @@ async function bootstrap() {
     optionSuccessStatus: 200,
   };
 
-  app.enableCors(corsOptions);
+  // app.enableCors(corsOptions);
   app.use(cookieParser());
 
   app.use(new LoggingMiddleware().use);

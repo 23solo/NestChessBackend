@@ -52,7 +52,7 @@ export class ChessInitService {
       kingPosition: [6, 4],
       userMove: 0,
       totalMoves: 0,
-      timeLeft: 1000,
+      timeLeft: 10 * 60 * 1000,
     };
     if (params.color == 'B') {
       user.kingPosition = [0, 4];

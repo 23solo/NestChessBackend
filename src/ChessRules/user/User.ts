@@ -9,4 +9,6 @@ export type User = {
   userMove: number;
   totalMoves: number;
   timeLeft: number;
+  startTime?: number;
+  socketId?: string;
 };

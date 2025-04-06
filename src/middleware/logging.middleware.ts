@@ -4,6 +4,9 @@ import { Request, Response, NextFunction } from 'express';
 @Injectable()
 export class LoggingMiddleware implements NestMiddleware {
   use(req: Request, res: Response, next: NextFunction) {
+    // Record start time
+    const startTime = Date.now();
+
     // Log the request details
     console.log(
       `Incoming Request: ${req.method} ${
@@ -15,12 +18,20 @@ export class LoggingMiddleware implements NestMiddleware {
 
     // Capture the response
     res.on('finish', () => {
-      console.log(`Response Status: ${res.statusCode}`);
+      const duration = Date.now() - startTime;
+      console.log(
+        `Response Status: ${res.statusCode} - Duration: ${duration}ms`,
+      );
     });
 
     // Handle errors
     res.on('error', (err) => {
-      console.error('Response Error:', err);
+      const duration = Date.now() - startTime;
+      console.error(
+        'Response Error:',
+        err,
+        `- Duration: ${duration}ms`,
+      );
     });
 
     next();
